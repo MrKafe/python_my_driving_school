@@ -1,0 +1,9 @@
+{% extends "index.html" %}
+
+{% block page_title %}{{ block.super }} - Addition{% endblock %}
+
+{% block content %}
+    <h1>Ma super calculatrice</h1>
+    <p>{{ nb1 }} + {{ nb2 }}, ça fait <strong>{{ total }}</strong> !<br />
+    Nous pouvons également calculer la somme dans le template : {{ nb1|add:nb2 }}.</p>
+{% endblock%}
