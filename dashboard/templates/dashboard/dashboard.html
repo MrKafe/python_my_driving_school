@@ -1,0 +1,15 @@
+{% extends "index.html" %}
+{% load static %}
+
+{% block title %}
+    Dashboard
+{% endblock %}
+
+{% block page_title %}{{ block.super }} - Dashboard{% endblock %}
+
+{% block content %}
+    <h1>Bienvenue sur RackPourTonPermis !</h1>
+    <p>Un permis, oui, mais il faut payer !</p>
+
+    <img src="{% static 'dashboard/mozart_punk.jpg' %}" alt="Test image">
+{% endblock%}

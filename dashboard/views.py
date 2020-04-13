@@ -3,10 +3,7 @@ from django.shortcuts import render, redirect
 
 
 def dashboard(request):
-    return HttpResponse("""
-        <h1>Bienvenue sur RackPourTonPermis !</h1>
-        <p>Un permis, oui, mais il faut payer !</p>
-    """)
+    return render(request, 'dashboard/dashboard.html', locals())
 
 
 def home(request):
@@ -17,19 +14,15 @@ def home(request):
 
 
 def id_road(request, id_test):
-    response = "<h1>Nombre choisi: {0}</h1>"
-
     if request.GET.get('text') is None:
         print("No get parameter")
     elif request.GET.get('text') == '404':
         raise Http404  # Raise throws errors
-    elif request.GET.get('text') == '404':
-        raise Http404  # Raise throws errors
     else:
         # response = response + "\n<p>Additional param text: " + request.GET.get('text') + "</p>"
-        response = response + "\n<p>Additional param text: {1}</p>"  # Use + to concatenate strings
+        text = request.GET.get('text')
 
-    return HttpResponse(response.format(id_test, request.GET.get('text')))
+    return render(request, 'dashboard/id_test.html', locals())
 
 
 def add(request, nb1, nb2):
