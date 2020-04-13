@@ -8,6 +8,11 @@
 {% block page_title %}{{ block.super }} - Dashboard{% endblock %}
 
 {% block content %}
+    {% if request.user.is_authenticated %}
+        <h1>Hello {{ request.user.username }}</h1>
+    {% else %}
+        <h1>Please login first</h1>
+    {% endif %}
     <h1>Bienvenue sur RackPourTonPermis !</h1>
     <p>Un permis, oui, mais il faut payer !</p>
 

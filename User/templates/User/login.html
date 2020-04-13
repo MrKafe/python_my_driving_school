@@ -1,0 +1,19 @@
+<h1>Login</h1>
+
+{% if error %}
+    <p>
+        <strong>
+            Utilisateur inconnu ou mauvais de mot de passe.
+        </strong>
+    </p>
+{% endif %}
+
+{% if user.is_authenticated %}
+    Vous êtes connecté, {{ user.username }} !
+{% else %}
+<form method="post" action="{% url 'login' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="submit" value="Login in" />
+</form>
+{% endif %}
