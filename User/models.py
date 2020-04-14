@@ -11,7 +11,7 @@ class Profile(models.Model):
         return self.user.username
 
 # from django.contrib.auth.models import User
-# from User.models import Profil
+# from User.models import Profile
 # user = User.objects.create_user('', 'mail+@gmail.com', 'qwerty')
 # profile = Profile(user=user, driving_license='A2')
 # profile.save()
