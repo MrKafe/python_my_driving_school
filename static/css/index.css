@@ -21,3 +21,8 @@
 .menu_element a:hover {
   background-color: #111111;
 }
+
+footer {
+  position: absolute;
+  bottom: 0;
+}

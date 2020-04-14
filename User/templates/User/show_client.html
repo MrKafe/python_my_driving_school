@@ -8,5 +8,6 @@
 {% block page_title %}{{ block.super }} - Your profile{% endblock %}
 
 {% block content %}
-    <h1>Welcome to your profile</h1>
+    <h1>Welcome to your profile {{ user.username }}</h1>
+    <ul>Hours remaining: {{ user.profile.hours }}</ul>
 {% endblock%}

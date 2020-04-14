@@ -29,6 +29,8 @@ def user_login(request):
 
 
 def show(request, user_id=None):
-    if user_id is None:
+    current_user_id = request.user.id
+    if user_id is None or user_id != current_user_id:
         return redirect('dashboard')
+
     return render(request, 'User/show_client.html', locals())
