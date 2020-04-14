@@ -7,10 +7,10 @@ class LoginForm(forms.Form):
 
 
 ROLES = [
-    ('admin', 'Administrator'),
-    ('secretary', 'Secretary'),
+    ('student', 'Student'),
     ('instructor', 'Instructor'),
-    ('student', 'Student')
+    ('secretary', 'Secretary'),
+    ('admin', 'Administrator'),
 ]
 
 

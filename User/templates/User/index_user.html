@@ -21,7 +21,12 @@
     <h1>Users list</h1>
     <ul>
         {% for user in users %}
-            <li>{{ user.username }}</li>
+            <li>
+                <a href="{% url 'show_user' user.id %}">{{ user.username }}</a>
+                ({{ user.groups.all.0 }})
+                {% ifequal user.groups.all.0.name 'student' %}
+                    - Remaining {{ user.profile.hours }} hours
+                {% endifequal %}</li>
         {% empty %}
             <li>Sadly there are no {% if filter %} {{ filter }}{% endif %} user</li>
         {% endfor %}
