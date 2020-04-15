@@ -2,34 +2,19 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-   <link rel="stylesheet" href="{% static 'css/index.css' %}" />
-   <title>
-       {% block title %}
-           RackPourTonPermis
-       {% endblock %}
-   </title>
+    {% comment %} Usage of 'static' {% endcomment %}
+    <link rel="stylesheet" href="{% static 'css/index.css' %}" />
+    <title>{% block title %} RackPourTonPermis {% endblock %}</title>
 </head>
 
 <body>
-    <h1>
-        {% block page_title %}
-            Hello
-        {% endblock %}
-    </h1>
-
-    <header>
-        Passer son permis facilement: une question d'argent
-    </header>
+    <h1>{% block page_title %} RackPourTonPermis {% endblock %}</h1>
 
     {% include "_menu.html" %}
     {% block submenu %}{% endblock %}
 
-    <section id="content">
-        {% block content %}{% endblock %}
-    </section>
+    <section id="content"> {% block content %}{% endblock %}</section>
 
-    <footer>
-        &copy; SumsangCampus 2020
-    </footer>
+    <footer>{% include '_footer.html' %}</footer>
 </body>
 </html>

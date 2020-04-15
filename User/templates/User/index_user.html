@@ -14,9 +14,16 @@
 {% block submenu %}
     <ul class="menu">
         <li class="menu_element"><a href="{% url 'index' %}">All</a></li>
-        <li class="menu_element"><a href="{% url 'index_filter' filter='admin' %}">Admins</a></li>
-        <li class="menu_element"><a href="{% url 'index_filter' filter='secretary' %}">Secretaries</a></li>
         <li class="menu_element"><a href="{% url 'index_filter' filter='student' %}">Students</a></li>
+        {% if request.user|granted:'instructor' %}
+            <li class="menu_element"><a href="{% url 'index_filter' filter='instructor' %}">Instructors</a></li>
+        {% endif %}
+        {% if request.user|granted:'secretary' %}
+            <li class="menu_element"><a href="{% url 'index_filter' filter='secretary' %}">Secretaries</a></li>
+        {% endif %}
+        {% if request.user|granted:'admin' %}
+            <li class="menu_element"><a href="{% url 'index_filter' filter='admin' %}">Admins</a></li>
+        {% endif %}
         {% if user|granted:"secretary" %}
             <li class="menu_element" style="float: right"><a href="{% url 'create_user' %}">Add new user</a></li>
         {% endif %}
@@ -30,11 +37,11 @@
             <li>
                 <a href="{% url 'show_user' user.id %}">{{ user.username }}</a>
                 ({{ user.groups.all.0 }})
-                {% ifequal user.groups.all.0.name 'student' %}
-                    - Remaining {{ user.profile.hours }} hours
+                {% ifequal user.groups.all.0.name 'student' %} {% comment %} Usage of 'ifequal' {% endcomment %}
+                    - Remaining {{ user.profile.time|time:'H:i' }} hours
                 {% endifequal %}</li>
         {% empty %}
-            <li>Sadly there are no {% if filter %} {{ filter }}{% endif %} user</li>
+            <li>Sadly there are no {% if filter %} {{ filter }}{% endif %} user you can see</li>
         {% endfor %}
     </ul>
 {% endblock%}

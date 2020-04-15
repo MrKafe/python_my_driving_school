@@ -19,6 +19,22 @@ def find_existing_user(username):
     return True
 
 
+def get_inheritance_roles(user, strict=False, only_id=False):
+    user_roles = user.groups.all()
+    unique_list = []
+    for user_role in user_roles:
+        if not strict and user_role not in unique_list:
+            role = Group.objects.get(name=user_role).id if only_id else user_role
+            unique_list.append(role)
+        if user_role.name in ROLE_HIERARCHY.keys():
+            inherit = ROLE_HIERARCHY[user_role.name]
+            for allowed in inherit:
+                allowed = Group.objects.get(name=allowed).id if only_id\
+                    else allowed
+                if allowed not in unique_list:
+                    unique_list.append(allowed)
+    return unique_list
+
 @register.filter(name='granted')
 def is_granted(user, role, strict=False):
     if user.is_staff:

@@ -8,6 +8,7 @@ from django.db import IntegrityError
 from . import forms, utilities
 from django.contrib.auth.models import User, Group
 from User.models import Profile
+from .utilities import get_inheritance_roles
 
 
 def user_login(request):
@@ -41,10 +42,11 @@ def index(request, filter=None):
     if filter:
         print("\033[96m> Listing [" + filter + "] users\033[m")
         group = Group.objects.get(name=filter)
-        users = group.user_set.all()
+        users = group.user_set.all().filter(groups__in=get_inheritance_roles(request.user, only_id=True))
     else:
         print("\033[96m> Listing [ALL] users\033[m")
-        users = User.objects.all()
+        print(get_inheritance_roles(request.user, only_id=True))
+        users = User.objects.filter(groups__in=get_inheritance_roles(request.user, only_id=True))
 
     return render(request, 'User/index_user.html', locals())
 
@@ -59,6 +61,8 @@ def show(request, user_id=None):
         raise PermissionDenied
 
     print('\033[96m> Accessing user ' + str(user_id) + ' details\033[m')
+
+    user = User.objects.get(pk=user_id)
 
     # template will decide text to display according to this information
     own_account = False
@@ -75,7 +79,7 @@ def create(request):
     has_error = False
     if request.method == "POST":
         print('\033[96m> Trying to create user\033[m')
-        form = forms.CreateForm(request.POST)
+        form = forms.CreateForm(request.POST, request=request)
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
@@ -89,6 +93,8 @@ def create(request):
                 group = Group.objects.get(name=role)  # Get role selected
                 user.groups.add(group)  # Add user to group
                 profile = Profile(user=user, driving_license=driving_license)  # Create user's profile
+                if role is not 'student':
+                    profile.time = None
                 user.save()
                 profile.save()
                 return redirect('index')
@@ -104,6 +110,6 @@ def create(request):
                     print('\033[1;91m> User [' + username + '] already excists\033[m')
     else:
         print('\033[96m> Accessed create user page\033[m')
-        form = forms.CreateForm()
+        form = forms.CreateForm(request=request)
 
     return render(request, 'User/create_user.html', locals())

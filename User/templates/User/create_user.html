@@ -1,23 +1,20 @@
 {% extends "index.html" %}
 
 {% block title %}
-    Create a user
+    {{ block.super }} - Create a user
 {% endblock %}
 
-{% block page_title %}{{ block.super }} - Create{% endblock %}
+{% block page_title %}{{ block.super }} - New user{% endblock %}
 
 {% block content %}
-    <h1>Create a user</h1>
-    <form method="post" action="{% url 'create_user' %}">
-        {% csrf_token %}
+    <form method="post" action="{% url 'create_user' %}">{% csrf_token %}
         {{ form.as_p }}
+        {% comment %}
+            'as_p' = one of the default display method
+            other: as_table ; as_ul
+        {% endcomment %}
         <input type="submit" value="Create" />
     </form>
-    {% if has_error %}
-        <p>
-            <strong>
-                {{ error }}
-            </strong>
-        </p>
-    {% endif %}
+
+    {% if has_error %}<p><strong>{{ error }}</strong></p>{% endif %}
 {% endblock%}

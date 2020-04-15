@@ -68,9 +68,9 @@ def create(request):
             if end_at <= start_at:
                 has_error = True
                 error = 'The appointment have to end AFTER it begin'
-            elif student.profile.hours < hours:
+            elif student.profile.time < hours:
                 has_error = True
-                error = str(student)+' does not have enough hours: '+str(student.profile.hours)+'h remaining'
+                error = str(student)+' does not have enough hours: '+str(student.profile.time)+'h remaining'
             else:
                 print('\033[96m> Creating new appoint for student/instructor '+str(student)+'/'+str(instructor)+' : '+\
                       str(hours)+'h\033[m')
@@ -134,9 +134,9 @@ def edit(request, meet_id):
             if end_at <= start_at:
                 has_error = True
                 error = 'The appointment have to end AFTER it begin'
-            elif student.profile.hours < hours:
+            elif student.profile.time < hours:
                 has_error = True
-                error = str(student) + ' does not have enough hours: ' + str(student.profile.hours) + 'h remaining'
+                error = str(student) + ' does not have enough hours: ' + str(student.profile.time) + 'h remaining'
             else:
                 print('\033[96m> Updating appointment for student/instructor ' + str(student) + '/' + str(
                     instructor) + ' : ' + \

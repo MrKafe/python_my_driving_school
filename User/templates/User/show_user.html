@@ -5,9 +5,20 @@
     Dashboard
 {% endblock %}
 
-{% block page_title %}{{ block.super }} - Your profile{% endblock %}
+{% block page_title %}
+    {{ block.super }} -
+    {% comment %} Block comment and 'title' filter {% endcomment %}
+    {% if own_account %} Your profile {% else %} {{ user.username|title }} account {% endif %}
+{% endblock %}
 
 {% block content %}
-    <h1>Welcome to your profile {{ user.username }}</h1>
-    <ul>Hours remaining: {{ user.profile.hours }}</ul>
+    <ul>
+        <li>Username: {{ user.username }}</li>
+        <li>Email: {{ user.email }}</li>
+        <li>Driving license: {{ user.profile.driving_license }}</li>
+        <li>User since: {{ user.date_joined|date:'m-d-Y' }}</li>
+        {% if user.profile.time %}
+            <li>Hours remaining: {{ user.profile.time|time:'H:i' }}</li>
+        {% endif %}
+    </ul>
 {% endblock%}
