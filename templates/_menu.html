@@ -2,9 +2,11 @@
     {% block nav %}
         <ul class="menu">
             <li class="menu_element"><a href="{% url 'dashboard' %}">Dashboard</a></li>
-            <li class="menu_element"><a href="{% url 'show_user' user.id %}">Profile</a></li>
-            <li class="menu_element"><a href="{% url 'create_user' %}">Add new user</a></li>
-            <li class="menu_element"><a href="{% url 'index' %}">List users</a></li>
+            <li class="menu_element"><a href="{% url 'show_user' user.id %}">{{ user.username }}'s profile</a></li>
+            {% if user|granted:"instructor" %}
+                <li class="menu_element"><a href="{% url 'create_user' %}">Add new user</a></li>
+                <li class="menu_element"><a href="{% url 'index' %}">List users</a></li>
+            {% endif %}
             {% if user.is_authenticated %}
                 <li class="menu_element" style="float: right"><a href="{% url 'logout' %}">Logout</a></li>
             {% endif %}

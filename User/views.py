@@ -1,6 +1,8 @@
 from django.http import Http404
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login
+from django.template.defaultfilters import register
+
 from . import forms
 from django.contrib.auth.models import User, Group
 from User.models import Profile
@@ -40,12 +42,15 @@ def user_login(request):
 
 
 def index(request, filter=None):
+    if not is_granted(request.user, 'instructor'):
+        return redirect('dashboard')
+
     if filter:
-        print("\033[96m > Listing [" + filter + "] users\033[m")
+        print("\033[96m> Listing [" + filter + "] users\033[m")
         group = Group.objects.get(name=filter)
         users = group.user_set.all()
     else:
-        print("\033[96m > Listing [ALL] users\033[m")
+        print("\033[96m> Listing [ALL] users\033[m")
         users = User.objects.all()
 
     return render(request, 'User/index_user.html', locals())
@@ -71,6 +76,9 @@ def show(request, user_id=None):
 
 
 def create(request):
+    if not is_granted(request.user, 'secretary'):
+        return redirect('dashboard')
+
     has_error = False
     if request.method == "POST":
         print('\033[96m> Trying to create user\033[m')
@@ -95,8 +103,9 @@ def create(request):
                 has_error = True
                 if not is_granted(request.user, role, True):
                     error = 'You don\'t have permission to create an ' + role + ' user'
-                    print('\033[1;91m> Logged user ['+request.user.username+'] does not have permission to create '+ \
-                        role+' users')
+                    print(
+                        '\033[1;91m> Logged user [' + request.user.username + '] does not have permission to create ' + \
+                        role + ' users')
                 elif find_existing_user(username):
                     error = 'An error has occured: User you\'re trying to create apparently already exists, please try again with an other Username'
                     print('\033[1;91m> User [' + username + '] already excists\033[m')
@@ -115,6 +124,7 @@ def find_existing_user(username):
     return True
 
 
+@register.filter(name='granted')
 def is_granted(user, role, strict=False):
     if user.is_staff:
         print('\033[92m> Staff is always granted\033[m')
