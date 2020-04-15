@@ -4,18 +4,32 @@
     New appointement
 {% endblock %}
 
-{% block page_title %}{{ block.super }} - New appointement{% endblock %}
+{% block page_title %}
+    {{ block.super }} -
+    {% if is_edit %}
+        Edit appointment
+    {% else %}
+        New appointment
+    {% endif %}
+{% endblock %}
 
 {% block content %}
-    <form method="post" action="{% url 'create_meet' %}">
+    {% if is_edit %}
+        <form method="post" action="{% url 'edit_meet' action_param.id%}">
+    {% else %}
+        <form method="post" action="{% url 'create_meet' %}">
+    {% endif %}
         {% csrf_token %}
         <div>
-            {{ form.student.label }} {{ form.student }}
+            {{ form.student.label }} {{ form.student }} {{ form.instructor.label }} {{ form.instructor }}
         </div>
         <div>
             The {{ form.date }} from {{ form.start_at_h }}:{{ form.start_at_m }} to {{ form.end_at_h }}:{{ form.end_at_m }}
         </div>
-        <input type="submit" value="Create" />
+        <div>
+            {{ form.location.label }} {{ form.location }}
+        </div>
+        <input type="submit" value="{% if is_edit %}Save{% else %}Create{% endif %}" />
     </form>
     {% if has_error %}
         <p>

@@ -1,7 +1,8 @@
 <tr>
     <td>{{ a.date|date:'Y-m-d' }}</td>
     <td>{{ a.start_at|date:'H:i' }} - {{ a.end_at|date:'H:i' }}</td>
-    <td></td>
+    <td>{{ a.hours|date:'H:i' }}</td>
     <td>{{ a.student }}</td>
-    <td></td>
+    <td>{{ a.location }}</td>
+    <td><a href="{% url 'edit_meet' a.id %}">Edit</a></td>
 </tr>

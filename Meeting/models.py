@@ -9,3 +9,5 @@ class Meeting(models.Model):
     date = models.DateField()
     start_at = models.TimeField()
     end_at = models.TimeField()
+    hours = models.TimeField()
+    location = models.TextField(null=True)

@@ -3,9 +3,9 @@
         <ul class="menu">
             <li class="menu_element"><a href="{% url 'dashboard' %}">Dashboard</a></li>
             <li class="menu_element"><a href="{% url 'show_user' user.id %}">{{ user.username }}'s profile</a></li>
+            <li class="menu_element"><a href="{% url 'index_meet' %}">Appointments</a></li>
 
             {% if user|granted:"instructor" %}
-                <li class="menu_element"><a href="{% url 'index_meet' %}">Appointments</a></li>
                 <li class="menu_element"><a href="{% url 'index' %}">List users</a></li>
             {% endif %}
 
