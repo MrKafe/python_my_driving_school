@@ -37,7 +37,6 @@ def create(request):
 
         form = forms.CreateForm(request.POST)
         if form.is_valid():
-            # TODO: Check if student have enough hours
             student = form.cleaned_data['student']
             if has_group(request.user, 'instructor'):
                 instructor = request.user
@@ -47,10 +46,22 @@ def create(request):
             start_at = get_date(date, form.cleaned_data['start_at_h'], form.cleaned_data['start_at_m'])
             end_at = get_date(date, form.cleaned_data['end_at_h'], form.cleaned_data['end_at_m'])
 
+            # TODO: This only take into account HOURS => add MINUTES
+            diff = end_at - start_at
+            days, seconds = diff.days, diff.seconds
+            hours = days * 24 + seconds // 3600
+            minutes = (seconds % 3600) // 60
+            seconds = seconds % 60
+
             if end_at <= start_at:
                 has_error = True
                 error = 'Your appointment have to end AFTER it begin'
+            elif student.profile.hours < hours:
+                has_error = True
+                error = str(student)+' does not have enough hours: '+str(student.profile.hours)+'h remaining'
             else:
+                print('\033[96m> Creating new appoint for student/instructor '+str(student)+'/'+str(instructor)+' : '+\
+                      str(hours)+'h\033[m')
                 meeting = Meeting(student=student, instructor=instructor, date=date, start_at=start_at, end_at=end_at)
                 meeting.save()
                 return redirect('index_meet')
