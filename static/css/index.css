@@ -22,6 +22,14 @@
   background-color: #111111;
 }
 
+table {
+  border-collapse: collapse;
+}
+
+table, th, td {
+  border: 1px solid black;
+}
+
 footer {
   position: absolute;
   bottom: 0;

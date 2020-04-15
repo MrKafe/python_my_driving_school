@@ -7,6 +7,7 @@ class Profile(models.Model):
     driving_license = models.CharField(max_length=42, null=True, blank=True)
     hours = models.IntegerField(default=0)
 
+
     def __str__(self):
         return self.user.username
 

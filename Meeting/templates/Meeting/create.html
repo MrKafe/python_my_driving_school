@@ -1,0 +1,38 @@
+{% extends "index.html" %}
+
+{% block title %}
+    New appointement
+{% endblock %}
+
+{% block page_title %}{{ block.super }} - New appointement{% endblock %}
+
+{% block content %}
+    <form method="post" action="{% url 'create_meet' %}">
+        {% csrf_token %}
+        <div>
+            {{ form.student.label }} {{ form.student }}
+        </div>
+        <div>
+            The {{ form.date }} from {{ form.start_at_h }}:{{ form.start_at_m }} to {{ form.end_at_h }}:{{ form.end_at_m }}
+        </div>
+        <input type="submit" value="Create" />
+    </form>
+    {% if has_error %}
+        <p>
+            <strong>
+                {{ error }}
+            </strong>
+        </p>
+    {% endif %}
+
+    {% if form.errors %}
+        {% for field in form %}
+            {% for error in field.errors %}
+                 {{field.label}}: {{ error|escape }}
+            {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+             {{ error|escape }}
+        {% endfor %}
+    {% endif %}
+{% endblock%}

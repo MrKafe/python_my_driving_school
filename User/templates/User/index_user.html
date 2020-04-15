@@ -11,13 +11,19 @@
     {% endif %}
 {% endblock %}
 
-{% block content %}
+{% block submenu %}
     <ul class="menu">
         <li class="menu_element"><a href="{% url 'index' %}">All</a></li>
         <li class="menu_element"><a href="{% url 'index_filter' filter='admin' %}">Admins</a></li>
         <li class="menu_element"><a href="{% url 'index_filter' filter='secretary' %}">Secretaries</a></li>
         <li class="menu_element"><a href="{% url 'index_filter' filter='student' %}">Students</a></li>
+        {% if user|granted:"secretary" %}
+            <li class="menu_element" style="float: right"><a href="{% url 'create_user' %}">Add new user</a></li>
+        {% endif %}
     </ul>
+{% endblock %}
+
+{% block content %}
     <h1>Users list</h1>
     <ul>
         {% for user in users %}

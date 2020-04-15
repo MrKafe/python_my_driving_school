@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'dashboard',
     'User',
+    'Meeting',
 ]
 
 MIDDLEWARE = [
@@ -59,6 +60,7 @@ TEMPLATES = [
             os.path.join(BASE_DIR, 'templates'),
             os.path.join(BASE_DIR, 'dashboard/templates'),
             os.path.join(BASE_DIR, 'User/templates'),
+            os.path.join(BASE_DIR, 'Meeting/templates'),
         ],
         'APP_DIRS': True,
         'OPTIONS': {

@@ -1,0 +1,31 @@
+{% extends "index.html" %}
+
+{% block title %}
+    Appointment list
+{% endblock %}
+
+{% block page_title %}
+    {{ block.super }} - Appointments
+{% endblock %}
+
+{% block submenu %}
+    <ul class="menu">
+        {% if user|granted:"instructor" %}
+            <li class="menu_element"><a href="{% url 'create_meet' %}">Plan new appointment</a></li>
+        {% endif %}
+    </ul>
+{% endblock %}
+
+{% block content %}
+    <table>
+        {% include 'Meeting/_head'|add:view_name %}
+        <tbody>
+            {% for a in appointments %}
+                {% include 'Meeting/'|add:view_name %}
+            {% empty %}
+                <tr>No element.</tr>
+            {% endfor %}
+        </tbody>
+
+    </table>
+{% endblock%}
