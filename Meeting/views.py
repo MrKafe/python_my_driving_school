@@ -1,5 +1,5 @@
 from datetime import datetime
-from django.http import Http404, HttpResponseServerError
+from django.http import Http404, HttpResponseServerError, HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.exceptions import PermissionDenied
 
@@ -174,3 +174,19 @@ def edit(request, meet_id):
         return render(request, 'Meeting/create.html', locals())
     else:
         raise PermissionDenied
+
+
+def delete(request, meet_id):
+    try:
+        meet = Meeting.objects.get(pk=meet_id)
+    except Meeting.DoesNotExist:
+        raise Http404()
+
+    if (is_granted(request.user, 'instructor') and meet.instructor.id is request.user.id) \
+            or (is_granted(request.user, 'secretary')):
+        # TODO: Re-add hours to student
+        meet.delete()
+    else:
+        raise PermissionDenied
+
+    return redirect('index_meet')
