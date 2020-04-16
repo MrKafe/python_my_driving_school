@@ -81,3 +81,17 @@ def has_group(user, group_name):
 # TODO: Add more validations on User on create/edit
 def check_user(form):
     return True
+
+
+@register.filter(name='icon')
+def get_icon(user):
+    if user.is_staff:
+        return '<i class="fa fa-black-tie"></i>'
+    elif is_granted(user, 'admin'):
+        return '<i class="fa fa-user-plus"></i>'
+    elif is_granted(user, 'secretary'):
+        return '<i class="fa fa-laptop"></i>'
+    elif is_granted(user, 'instructor'):
+        return '<i class="fa fa-car"></i>'
+    else:
+        return '<i class="fa fa-user"></i>'

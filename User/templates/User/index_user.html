@@ -35,7 +35,7 @@
     <ul>
         {% for user in users %}
             <li>
-                <a href="{% url 'show_user' user.id %}">{{ user.username }}</a>
+                {{ user|icon|safe }} <a href="{% url 'show_user' user.id %}">{{ user.username }}</a>
                 ({{ user.groups.all.0 }})
                 {% ifequal user.groups.all.0.name 'student' %} {% comment %} Usage of 'ifequal' {% endcomment %}
                     - Remaining {{ user.profile.time|time:'H:i' }} hours

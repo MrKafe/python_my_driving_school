@@ -16,19 +16,7 @@ def auth_required_middleware(get_response):
 def user_icon_middleware(get_response):
     def user_icon(request):
         if request.user.is_authenticated:
-            u = request.user
-            if u.is_staff:
-                u.icon = '<i class="fa fa-black-tie"></i>'
-            elif us.is_granted(u, 'admin'):
-                u.icon = '<i class="fa fa-user-plus"></i>'
-            elif us.is_granted(u, 'secretary'):
-                u.icon = '<i class="fa fa-laptop"></i>'
-            elif us.is_granted(u, 'instructor'):
-                u.icon = '<i class="fa fa-car"></i>'
-            else:
-                u.icon = '<i class="fa fa-user"></i>'
-            print('Icon is: '+u.icon)
-            request.user = u
+            request.user.icon = us.get_icon(request.user)
         return get_response(request)
 
     return user_icon
