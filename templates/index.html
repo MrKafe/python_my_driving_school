@@ -4,11 +4,13 @@
 <head>
     {% comment %} Usage of 'static' {% endcomment %}
     <link rel="stylesheet" href="{% static 'css/index.css' %}" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://use.fontawesome.com/51b062812a.js"></script>
     <title>{% block title %} RackPourTonPermis {% endblock %}</title>
 </head>
 
 <body>
-    <h1>{% block page_title %} RackPourTonPermis {% endblock %}</h1>
+    <h1>{% block page_title %}{{ request.user.icon|safe }} RackPourTonPermis {% endblock %}</h1>
 
     {% include "_menu.html" %}
     {% block submenu %}{% endblock %}

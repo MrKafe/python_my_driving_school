@@ -48,7 +48,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'User.middleware.auth_required_middleware'
+    'User.middleware.auth_required_middleware',
+    'User.middleware.user_icon_middleware'
 ]
 
 ROOT_URLCONF = 'MyDrivingSchool.urls'
@@ -73,6 +74,10 @@ TEMPLATES = [
         },
     },
 ]
+
+TEMPLATE_CONTEXT_PROCESSORS = (
+    'User.context_processors.con_test',
+)
 
 WSGI_APPLICATION = 'MyDrivingSchool.wsgi.application'
 
