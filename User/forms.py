@@ -52,6 +52,11 @@ class CreateForm(forms.Form):
     )
 
 
+class EditPasswordForm(forms.Form):
+    password = forms.CharField(label="Current password", widget=forms.PasswordInput)
+    new_password = forms.CharField(label="New password", widget=forms.PasswordInput)
+
+
 class EditForm(forms.Form):
     username = forms.CharField(label="Username", max_length=30)
     email = forms.CharField(label="Email", max_length=80)
@@ -61,5 +66,7 @@ class EditWithTimeForm(forms.Form):
     username = forms.CharField(label="Username", max_length=30)
     email = forms.CharField(label="Email", max_length=80)
     driving = forms.CharField(label="Driving license type", max_length=30, required=False)
-    hours = forms.IntegerField(label="Hours", required=False, validators=[MinValueValidator(0)])
-    minutes = forms.IntegerField(label="Minutes", required=False, validators=[MinValueValidator(0)])
+    # hours = forms.IntegerField(label="Hours", required=False, validators=[MinValueValidator(0)])
+    # minutes = forms.IntegerField(label="Minutes", required=False, validators=[MinValueValidator(0)])
+    hours = forms.IntegerField(label="Hours", required=False)
+    minutes = forms.IntegerField(label="Minutes", required=False)

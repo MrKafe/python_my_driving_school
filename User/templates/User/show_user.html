@@ -19,6 +19,27 @@
             <li>Hours remaining: {{ user.profile.time|time:'H:i' }}</li>
         {% endif %}
     </ul>
-    <a href="{% url 'edit_user' user.id %}"><button type="button">Edit</button></a>
-    <a href="{% url 'delete_user' user.id %}"><button type="button">Delete</button></a>
+    {% if own_account %}
+        <p>To change your password, please fill your old and new password bellow</p>
+        <form method="post" action="{% url 'show_user' user_id %}">{% csrf_token %}
+            {{ form.as_p }}
+            <input type="submit" value="Change password" />
+            {% if has_error %}<p><strong>{{ error }}</strong></p>{% endif %}
+            {% if form.errors %}
+                {% for field in form %}
+                    {% for error in field.errors %}
+                         {{field.label}}: {{ error|escape }}
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                     {{ error|escape }}
+                {% endfor %}
+            {% endif %}
+        </form>
+
+    {% else %}
+        <a href="{% url 'edit_user' user.id %}"><button type="button">Edit</button></a>
+        <a href="{% url 'delete_user' user.id %}"><button type="button">Delete</button></a>
+    {% endif %}
+    {#    {{ request.resolver_match.url_name }}#}
 {% endblock%}

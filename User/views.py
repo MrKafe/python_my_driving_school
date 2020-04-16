@@ -70,9 +70,27 @@ def show(request, user_id=None):
 
     # template will decide text to display according to this information
     own_account = False
+    has_error = False
     if user_id == current_user_id:
         own_account = True
+        if request.method == "POST":
+            print('\033[96m> Trying change password\033[m')
+            form = forms.EditPasswordForm(request.POST)
+            if form.is_valid():
+                cur_pdw = form.cleaned_data['password']
+                new_pdw = form.cleaned_data['new_password']
+                upd_user = authenticate(username=request.user.username, password=cur_pdw)
+                has_error = True
+                if upd_user:
+                    print('\033[92m> Changing [' + upd_user.username + '] password\033[m')
+                    upd_user.set_password(new_pdw)
+                    upd_user.save()
+                    login(request, upd_user)  # don't forget to re-login the user, if not he will be redirected to login
+                    error = "Password changed successfully!"
+                else:
+                    error = "An error has occurred"
 
+        form = forms.EditPasswordForm()
     return render(request, 'User/show_user.html', locals())
 
 
@@ -160,7 +178,7 @@ def edit(request, user_id):
                 user.save()
                 user.profile.save()
 
-                # return redirect('show_user', user_id=user_id)
+                return redirect('show_user', user_id=user_id)
         else:
             has_error = True
             print('\033[91m - Edit form is invalid\033[m')
