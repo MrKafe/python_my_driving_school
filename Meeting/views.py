@@ -65,8 +65,6 @@ def create(request):
             else:
                 instructor = request.user
             date = form.cleaned_data['date']
-            # start_at = get_date(date, form.cleaned_data['start_at_h'], form.cleaned_data['start_at_m'])
-            # end_at = get_date(date, form.cleaned_data['end_at_h'], form.cleaned_data['end_at_m'])
             start_at = timedelta(hours=int(form.cleaned_data['start_at_h']), minutes=int(form.cleaned_data['start_at_m']))
             end_at = timedelta(hours=int(form.cleaned_data['end_at_h']), minutes=int(form.cleaned_data['end_at_m']))
             location = form.cleaned_data['location']
@@ -93,10 +91,7 @@ def create(request):
                     hours=strftime('%H:%M', gmtime(duration_delta.total_seconds())),
                     location=location,
                 )
-                print(meeting.hours)
-                print(type(duration_delta_string))
                 student.profile.time = strftime('%H:%M', gmtime((t_remains_delta - duration_delta).total_seconds()))
-                print(student.profile.time)
                 meeting.save()
                 student.profile.save()
                 return redirect('index_meet')
@@ -123,11 +118,12 @@ def edit(request, meet_id):
         add_instructor = False
     else:
         add_instructor = True
+        print("ADD INSTRUCTORS")
 
     if request.method == "POST":
         print('\033[96m> Trying to create meeting\033[m')
 
-        form = forms.CreateForm(request.POST)
+        form = forms.EditForm(request.POST, add_instructor=add_instructor)
         if form.is_valid():
             student = form.cleaned_data['student']
             if add_instructor:
@@ -135,40 +131,41 @@ def edit(request, meet_id):
             else:
                 instructor = request.user
             date = form.cleaned_data['date']
-            start_at = get_date(date, form.cleaned_data['start_at_h'], form.cleaned_data['start_at_m'])
-            end_at = get_date(date, form.cleaned_data['end_at_h'], form.cleaned_data['end_at_m'])
+            start_at = timedelta(hours=int(form.cleaned_data['start_at_h']), minutes=int(form.cleaned_data['start_at_m']))
+            end_at = timedelta(hours=int(form.cleaned_data['end_at_h']), minutes=int(form.cleaned_data['end_at_m']))
             location = form.cleaned_data['location']
 
-            # TODO: This only take into account HOURS => add MINUTES
-            diff = end_at - start_at
-            days, seconds = diff.days, diff.seconds
-            hours = days * 24 + seconds // 3600
-            minutes = (seconds % 3600) // 60
-            seconds = seconds % 60
+            duration_delta = end_at - start_at
+            duration_delta_string = strftime('%H:%M', gmtime(duration_delta.total_seconds()))
+
+            old_start_at = timedelta(hours=meet.start_at.hour, minutes=meet.start_at.minute)
+            old_end_at = timedelta(hours=meet.end_at.hour, minutes=meet.end_at.minute)
+            diff = gmtime((old_end_at - old_start_at).total_seconds())
+            old_duration_delta = timedelta(hours=diff.tm_hour, minutes=diff.tm_min)
+            t_remains_delta = timedelta(hours=meet.student.profile.time.hour, minutes=meet.student.profile.time.minute) + old_duration_delta
 
             if end_at <= start_at:
                 has_error = True
                 error = 'The appointment have to end AFTER it begin'
-            elif student.profile.time < hours:
+            elif t_remains_delta < duration_delta:
                 has_error = True
-                error = str(student) + ' does not have enough hours: ' + str(student.profile.time) + 'h remaining'
+                error = str(meet.student) + ' does not have enough hours: ' + meet.student.profile.time.strftime('%H:%M') + 'h remaining'
             else:
-                print('\033[96m> Updating appointment for student/instructor ' + str(student) + '/' +\
-                      str(instructor) + ' : ' + str(hours) + 'h\033[m')
-                meet.student = student
-                meet.instructor = instructor
+                print('\033[96m> Updating appointment for student/instructor ' + str(meet.student) + '/' +\
+                      str(instructor)+'\033[m')
                 meet.date = date
-                meet.start_at = start_at
-                meet.end_at = end_at
-                meet.hours = datetime.strptime(str(hours), '%H')
+                meet.start_at = strftime('%H:%M', gmtime(start_at.total_seconds()))
+                meet.end_at = strftime('%H:%M', gmtime(end_at.total_seconds()))
+                meet.hours = strftime('%H:%M', gmtime(duration_delta.total_seconds()))
                 meet.location = location
                 meet.save()
+                meet.student.profile.time = strftime('%H:%M', gmtime((t_remains_delta - duration_delta).total_seconds()))
+                meet.student.profile.save()
                 return redirect('index_meet')
 
     if (is_granted(request.user, 'instructor') and meet.instructor.id is request.user.id)\
             or (is_granted(request.user, 'secretary')):
         data = {
-            'student': meet.student,
             'date': meet.date,
             'start_at_h': meet.start_at.strftime("%H"),
             'start_at_m': meet.start_at.strftime("%M"),
@@ -176,12 +173,18 @@ def edit(request, meet_id):
             'end_at_m': meet.end_at.strftime("%M"),
             'location': meet.location
         }
+        initial = {
+            'student': meet.student,
+            'instructor': meet.instructor,
+        }
 
         data['start_at_h'] = '{}'.format(data['start_at_h'][1:] if data['start_at_h'].startswith('0') else data['start_at_h'])
         data['start_at_m'] = '{}'.format(data['start_at_m'][1:] if data['start_at_m'].startswith('0') else data['start_at_m'])
         data['end_at_h'] = '{}'.format(data['end_at_h'][1:] if data['end_at_h'].startswith('0') else data['end_at_h'])
         data['end_at_m'] = '{}'.format(data['end_at_m'][1:] if data['end_at_m'].startswith('0') else data['end_at_m'])
-        form = forms.CreateForm(data)
+        # form = forms.CreateForm(data, add_instructor=add_instructor)
+        form = forms.EditForm(data=data, initial=initial, add_instructor=add_instructor)
+
 
         action_param = {'id': meet_id}
         is_edit = True
@@ -198,7 +201,13 @@ def delete(request, meet_id):
 
     if (is_granted(request.user, 'instructor') and meet.instructor.id is request.user.id) \
             or (is_granted(request.user, 'secretary')):
-        # TODO: Re-add hours to student
+        start_at = timedelta(hours=meet.start_at.hour, minutes=meet.start_at.minute)
+        end_at = timedelta(hours=meet.end_at.hour, minutes=meet.end_at.minute)
+        diff = gmtime((end_at - start_at).total_seconds())
+        duration_delta = timedelta(hours=diff.tm_hour, minutes=diff.tm_min)
+        t_remains_delta = timedelta(hours=meet.student.profile.time.hour, minutes=meet.student.profile.time.minute)
+        meet.student.profile.time = strftime('%H:%M', gmtime((t_remains_delta + duration_delta).total_seconds()))
+        meet.student.profile.save()
         meet.delete()
     else:
         raise PermissionDenied
