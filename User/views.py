@@ -115,8 +115,11 @@ def create(request):
                 group = Group.objects.get(name=role)  # Get role selected
                 user.groups.add(group)  # Add user to group
                 profile = Profile(user=user, driving_license=driving_license)  # Create user's profile
-                if role is not 'student':
+                if str(role) == 'student':  # casting str role in str: only way to make this if working
+                    profile.time = datetime.strptime('00:00:00', '%H:%M:%S')
+                else:
                     profile.time = None
+
                 user.save()
                 profile.save()
                 return redirect('index')
@@ -194,3 +197,4 @@ def edit(request, user_id):
             form = forms.EditWithTimeForm(data)
 
     return render(request, 'User/edit.html', locals())
+

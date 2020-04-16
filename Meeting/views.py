@@ -97,7 +97,7 @@ def create(request):
                 return redirect('index_meet')
         else:
             has_error = True
-            error = 'An error has occured'
+            error = 'An error has occurred'
     else:
         print('\033[96m> Accessed create meeting page\033[m')
         form = forms.CreateForm(add_instructor=add_instructor)
@@ -184,7 +184,6 @@ def edit(request, meet_id):
         data['end_at_m'] = '{}'.format(data['end_at_m'][1:] if data['end_at_m'].startswith('0') else data['end_at_m'])
         # form = forms.CreateForm(data, add_instructor=add_instructor)
         form = forms.EditForm(data=data, initial=initial, add_instructor=add_instructor)
-
 
         action_param = {'id': meet_id}
         is_edit = True
