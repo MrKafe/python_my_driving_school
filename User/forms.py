@@ -1,4 +1,6 @@
 from django import forms
+from django.core.validators import MinValueValidator
+
 from .utilities import ROLE_HIERARCHY
 
 
@@ -48,3 +50,16 @@ class CreateForm(forms.Form):
         # choices=ROLES,
         initial='student',
     )
+
+
+class EditForm(forms.Form):
+    username = forms.CharField(label="Username", max_length=30)
+    email = forms.CharField(label="Email", max_length=80)
+
+
+class EditWithTimeForm(forms.Form):
+    username = forms.CharField(label="Username", max_length=30)
+    email = forms.CharField(label="Email", max_length=80)
+    driving = forms.CharField(label="Driving license type", max_length=30, required=False)
+    hours = forms.IntegerField(label="Hours", required=False, validators=[MinValueValidator(0)])
+    minutes = forms.IntegerField(label="Minutes", required=False, validators=[MinValueValidator(0)])

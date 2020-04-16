@@ -1,0 +1,31 @@
+{% extends "index.html" %}
+
+{% block title %}
+    {{ block.super }} - Edit user
+{% endblock %}
+
+{% block page_title %}{{ block.super }} - Edit user{% endblock %}
+
+{% block content %}
+    <form method="post" action="{% url 'edit_user' user_id %}">{% csrf_token %}
+        {{ form.as_p }}
+        {% comment %}
+            'as_p' = one of the default display method
+            other: as_table ; as_ul
+        {% endcomment %}
+        <input type="submit" value="Edit" />
+    </form>
+
+    {% if has_error %}<p><strong>{{ error }}</strong></p>{% endif %}
+
+    {% if form.errors %}
+        {% for field in form %}
+            {% for error in field.errors %}
+                 {{field.label}}: {{ error|escape }}
+            {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+             {{ error|escape }}
+        {% endfor %}
+    {% endif %}
+{% endblock%}

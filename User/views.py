@@ -1,5 +1,8 @@
+from datetime import datetime, date, timedelta
+from time import time, mktime, strftime, gmtime
+
 from django.http import Http404
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.template.defaultfilters import register
 from django.core.exceptions import PermissionDenied
@@ -55,6 +58,7 @@ def show(request, user_id=None):
     current_user_id = request.user.id
 
     # security: student can only access it's own account, instructors and upper can access every
+    # TODO: Not well secured
     if (not utilities.is_granted(request.user, 'student')) or \
             user_id is None or \
             ((not utilities.is_granted(request.user, 'instructor')) and user_id != current_user_id):
@@ -113,3 +117,62 @@ def create(request):
         form = forms.CreateForm(request=request)
 
     return render(request, 'User/create_user.html', locals())
+
+
+def edit(request, user_id):
+    print('\033[96m> Accessing user ' + str(user_id) + ' edition\033[m')
+    user = get_object_or_404(User, pk=user_id)
+
+    to_edit_role = user.groups.all()[0].name
+    if not utilities.is_granted(request.user, 'secretary') or not utilities.is_granted(request.user, to_edit_role, strict=True):
+        raise PermissionDenied
+
+    has_error = False
+    if request.method == "POST":
+        print('\033[96m> Trying to edit user\033[m')
+        form = forms.EditForm(request.POST)
+        if utilities.has_group(user, 'student'):
+            form = forms.EditWithTimeForm(request.POST)
+        if form.is_valid():
+            print('\033[92m - Edit form is valid\033[m')
+            username = form.cleaned_data['username']
+            if user.username is username and User.objects.get(username=username):
+                has_error = True
+                error = "This username ("+username+") is already in use by another student"
+                print('\033[91m - New username already attributed\033[m')
+            else:
+                email = form.cleaned_data['email']
+                driving = form.cleaned_data['driving'] or None
+                hours = form.cleaned_data['hours'] or 0
+                minutes = form.cleaned_data['minutes'] or 0
+
+                if hours is not 0 or minutes is not 0:
+                    t1 = timedelta(hours=hours, minutes=minutes)
+                    t2 = timedelta(hours=user.profile.time.hour, minutes=user.profile.time.minute)
+                    new_time = t1+t2
+                    delta_as_time_obj = gmtime(new_time.total_seconds())
+                    new_time = strftime('%H:%M', delta_as_time_obj)
+                    user.profile.time = new_time
+
+                user.username = username
+                user.email = email
+                user.profile.driving_license = driving
+                user.save()
+                user.profile.save()
+
+                # return redirect('show_user', user_id=user_id)
+        else:
+            has_error = True
+            print('\033[91m - Edit form is invalid\033[m')
+    else:
+        data = {
+            'username': user.username,
+            'email': user.email,
+            'driving': user.profile.driving_license,
+        }
+
+        form = forms.EditForm(data)
+        if utilities.has_group(user, 'student'):
+            form = forms.EditWithTimeForm(data)
+
+    return render(request, 'User/edit.html', locals())

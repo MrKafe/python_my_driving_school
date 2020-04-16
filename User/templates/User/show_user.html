@@ -1,9 +1,7 @@
 {% extends "index.html" %}
 {% load static %}
 
-{% block title %}
-    Dashboard
-{% endblock %}
+{% block title %}{{ block.super }} - User profile{% endblock %}
 
 {% block page_title %}
     {{ block.super }} -
@@ -21,4 +19,6 @@
             <li>Hours remaining: {{ user.profile.time|time:'H:i' }}</li>
         {% endif %}
     </ul>
+    <a href="{% url 'edit_user' user.id %}"><button type="button">Edit</button></a>
+    <a href="{% url 'delete_user' user.id %}"><button type="button">Delete</button></a>
 {% endblock%}
