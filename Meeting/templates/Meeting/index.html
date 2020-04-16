@@ -10,7 +10,7 @@
 
 {% block submenu %}
     <ul class="menu">
-        {% if user|granted:"instructor" %}
+        {% if request.user|granted:"instructor" %}
             <li class="menu_element"><a href="{% url 'create_meet' %}">Plan new appointment</a></li>
         {% endif %}
     </ul>

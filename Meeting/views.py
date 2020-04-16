@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+from time import gmtime, strftime
 from django.http import Http404, HttpResponseServerError, HttpResponseRedirect
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.exceptions import PermissionDenied
@@ -7,6 +8,7 @@ from . import forms
 from User.utilities import is_granted, has_group
 from Meeting.utilities import get_datetime_from_date_hour_minute as get_date
 from Meeting.models import Meeting
+from django.contrib.auth.models import User
 from User.models import Profile
 
 
@@ -14,17 +16,26 @@ def index(request, filter=None):
     print('\033[96m> Accessing appointment page\033[m')
 
     if is_granted(request.user, 'secretary'):
-        appointments = Meeting.objects.all()
+        if filter:
+            view_name = '_admin_row.html'
+            user = get_object_or_404(User, pk=filter)
+            if has_group(user, 'student'):
+                appointments = Meeting.objects.filter(student=user)
+            elif has_group(user, 'instructor'):
+                appointments = Meeting.objects.filter(instructor=user)
+            else:
+                return HttpResponseServerError("Impossible to solve this selection, stop playing with the URL, damn human")
+        else:
+            appointments = Meeting.objects.all()
+            view_name = '_admin_row.html'
     elif is_granted(request.user, 'instructor'):
         appointments = Meeting.objects.filter(instructor=request.user)
+        view_name = '_instructor_row.html'
     elif has_group(request.user, 'student'):
         appointments = Meeting.objects.filter(student=request.user)
+        view_name = '_student_row.html'
     else:
         raise HttpResponseServerError
-
-    view_name = '_admin_row.html' if is_granted(request.user, 'secretary') \
-        else '_instructor_row.html' if has_group(request.user, 'instructor') \
-        else '_student_row.html'
 
     print('\033[96m - View : '+view_name+'\033[m')
 
@@ -54,36 +65,40 @@ def create(request):
             else:
                 instructor = request.user
             date = form.cleaned_data['date']
-            start_at = get_date(date, form.cleaned_data['start_at_h'], form.cleaned_data['start_at_m'])
-            end_at = get_date(date, form.cleaned_data['end_at_h'], form.cleaned_data['end_at_m'])
+            # start_at = get_date(date, form.cleaned_data['start_at_h'], form.cleaned_data['start_at_m'])
+            # end_at = get_date(date, form.cleaned_data['end_at_h'], form.cleaned_data['end_at_m'])
+            start_at = timedelta(hours=int(form.cleaned_data['start_at_h']), minutes=int(form.cleaned_data['start_at_m']))
+            end_at = timedelta(hours=int(form.cleaned_data['end_at_h']), minutes=int(form.cleaned_data['end_at_m']))
             location = form.cleaned_data['location']
 
-            # TODO: This only take into account HOURS => add MINUTES
-            diff = end_at - start_at
-            days, seconds = diff.days, diff.seconds
-            hours = days * 24 + seconds // 3600
-            minutes = (seconds % 3600) // 60
-            seconds = seconds % 60
+            duration_delta = end_at - start_at
+            duration_delta_string = strftime('%H:%M', gmtime(duration_delta.total_seconds()))
+            t_remains_delta = timedelta(hours=student.profile.time.hour, minutes=student.profile.time.minute)
 
             if end_at <= start_at:
                 has_error = True
                 error = 'The appointment have to end AFTER it begin'
-            elif student.profile.time < hours:
+            elif t_remains_delta < duration_delta:
                 has_error = True
                 error = str(student)+' does not have enough hours: '+str(student.profile.time)+'h remaining'
             else:
                 print('\033[96m> Creating new appoint for student/instructor '+str(student)+'/'+str(instructor)+' : '+\
-                      str(hours)+'h\033[m')
+                      strftime('%H:%M', gmtime(duration_delta.total_seconds()))+'h\033[m')
                 meeting = Meeting(
                     student=student,
                     instructor=instructor,
                     date=date,
-                    start_at=start_at,
-                    end_at=end_at,
-                    hours=datetime.strptime(str(hours), '%H'),
+                    start_at=strftime('%H:%M', gmtime(start_at.total_seconds())),
+                    end_at=strftime('%H:%M', gmtime(end_at.total_seconds())),
+                    hours=strftime('%H:%M', gmtime(duration_delta.total_seconds())),
                     location=location,
                 )
+                print(meeting.hours)
+                print(type(duration_delta_string))
+                student.profile.time = strftime('%H:%M', gmtime((t_remains_delta - duration_delta).total_seconds()))
+                print(student.profile.time)
                 meeting.save()
+                student.profile.save()
                 return redirect('index_meet')
         else:
             has_error = True
@@ -138,9 +153,8 @@ def edit(request, meet_id):
                 has_error = True
                 error = str(student) + ' does not have enough hours: ' + str(student.profile.time) + 'h remaining'
             else:
-                print('\033[96m> Updating appointment for student/instructor ' + str(student) + '/' + str(
-                    instructor) + ' : ' + \
-                      str(hours) + 'h\033[m')
+                print('\033[96m> Updating appointment for student/instructor ' + str(student) + '/' +\
+                      str(instructor) + ' : ' + str(hours) + 'h\033[m')
                 meet.student = student
                 meet.instructor = instructor
                 meet.date = date

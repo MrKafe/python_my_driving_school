@@ -1,9 +1,9 @@
 <tr>
     <td>{{ a.date|date:'Y-m-d' }}</td>
     <td>{{ a.start_at|date:'H:i' }} - {{ a.end_at|date:'H:i' }}</td>
-    <td>{{ a.time|date:'H:i' }}</td>
-    <td>{{ a.student }}</td>
-    <td>{{ a.instructor }}</td>
+    <td>{{ a.hours|date:'H:i' }}</td>
+    <td><a href="{% url 'index_meet_filter' a.student.id %}">{{ a.student }}</a></td>
+    <td><a href="{% url 'index_meet_filter' a.instructor.id %}">{{ a.instructor }}</a></td>
     <td>{{ a.location }}</td>
     <td><a href="{% url 'edit_meet' a.id %}">Edit</a> / <a href="{% url 'delete_meet' a.id %}">Delete</a></td>
 </tr>
