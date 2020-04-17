@@ -238,6 +238,10 @@ def delete(request, user_id):
         print('\033[1;91m< User does not have permission to delete this user\033[m')
         raise PermissionDenied
 
+    if user.is_staff and not request.user.is_staff:
+        print('\033[1;91m< User is trying to delete admin, it\'s a mutiny!\033[m')
+        raise PermissionDenied
+
     username = user.username
     user.delete()
     print('\033[92m✓ User ['+username+'] have been deleted with it\'s profile and appointments\n\033[m')
