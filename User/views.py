@@ -18,21 +18,21 @@ def user_login(request):
     error = False
 
     if request.method == "POST":
-        print('\033[96m> Trying to log in\033[m')
+        print('\033[96m> Attempting to log in\033[m')
         form = forms.LoginForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data["username"]
             password = form.cleaned_data["password"]
             user = authenticate(username=username, password=password)
             if user:
-                print('\033[92m> Logging in user [' + username + ']\033[m')
+                print('\033[92m✓ Logging in user [' + username + ']\033[m')
                 login(request, user)
                 return redirect('dashboard')
             else:
-                print('\033[91m> Could not find user [' + username + ']\033[m')
+                print('\033[91m✕ Could not find user [' + username + ']\033[m')
                 error = True
     else:
-        print('\033[96m> Accessed login page\033[m')
+        print('\033[96m> Access to login page\033[m')
         form = forms.LoginForm()
 
     return render(request, 'User/login.html', locals())
@@ -40,16 +40,16 @@ def user_login(request):
 
 def index(request, filter=None):
     if not utilities.is_granted(request.user, 'instructor'):
+        print('\033[1;91m< User have to be granted [instructor] \033[m')
         raise PermissionDenied
 
     if filter:
-        print("\033[96m> Listing [" + filter + "] users\033[m")
         group = Group.objects.get(name=filter)
         users = group.user_set.all().filter(groups__in=get_inheritance_roles(request.user, only_id=True))
+        print('\033[92m✓ Listing ['+filter+'] users ('+str(users.count())+')\033[m')
     else:
-        print("\033[96m> Listing [ALL] users\033[m")
-        print(get_inheritance_roles(request.user, only_id=True))
         users = User.objects.filter(groups__in=get_inheritance_roles(request.user, only_id=True))
+        print('\033[92m✓ Listing [ALL] users ('+str(users.count())+')\033[m')
 
     return render(request, 'User/index_user.html', locals())
 
@@ -58,15 +58,16 @@ def show(request, user_id=None):
     current_user_id = request.user.id
 
     # security: student can only access it's own account, instructors and upper can access every
-    # TODO: Not well secured
+    # TODO: Not well secured: do as delete
     if (not utilities.is_granted(request.user, 'student')) or \
             user_id is None or \
             ((not utilities.is_granted(request.user, 'instructor')) and user_id != current_user_id):
+        print('\033[1;91m< User have to:\n  - be granted [instructor]\n  - own the account\033[m')
         raise PermissionDenied
 
-    print('\033[96m> Accessing user ' + str(user_id) + ' details\033[m')
-
+    # TODO: get or 404
     user = User.objects.get(pk=user_id)
+    print('\033[96m> Access to user [' + str(user.username) + ']\'s details\033[m')
 
     # template will decide text to display according to this information
     own_account = False
@@ -74,7 +75,7 @@ def show(request, user_id=None):
     if user_id == current_user_id:
         own_account = True
         if request.method == "POST":
-            print('\033[96m> Trying change password\033[m')
+            print('\033[96m> Attempting to change [' + str(user.username) + ']\'s password\033[m')
             form = forms.EditPasswordForm(request.POST)
             if form.is_valid():
                 cur_pdw = form.cleaned_data['password']
@@ -82,13 +83,14 @@ def show(request, user_id=None):
                 upd_user = authenticate(username=request.user.username, password=cur_pdw)
                 has_error = True
                 if upd_user:
-                    print('\033[92m> Changing [' + upd_user.username + '] password\033[m')
                     upd_user.set_password(new_pdw)
                     upd_user.save()
                     login(request, upd_user)  # don't forget to re-login the user, if not he will be redirected to login
+                    print('\033[92m✓ Updated user [' + upd_user.username + ']\'s password\033[m')
                     error = "Password changed successfully!"
                 else:
-                    error = "An error has occurred"
+                    print('\033[91m✕ Updating user\'s password failed\033[m')
+                    error = "An error has occurred, please make sure you filled the right password"
 
         form = forms.EditPasswordForm()
     return render(request, 'User/show_user.html', locals())
@@ -96,25 +98,27 @@ def show(request, user_id=None):
 
 def create(request):
     if not utilities.is_granted(request.user, 'secretary'):
+        print('\033[1;91m< User have to be granted [secretary] to create user\033[m')
         raise PermissionDenied
 
     has_error = False
     if request.method == "POST":
-        print('\033[96m> Trying to create user\033[m')
+        print('\033[96m> Attempting to create user\033[m')
         form = forms.CreateForm(request.POST, request=request)
+
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
             email = form.cleaned_data['email']
             driving_license = form['driving'].value()  # unable to get it thanks to .cleaned_data
             role = form.cleaned_data['role']
+
             if utilities.is_granted(request.user, role, True) and not utilities.find_existing_user(username):
-                print('\033[96m> Creating user [' + username + ' (' + email + ')]\033[m')
-                print('\033[96m>               [Role ' + role + ' License ' + driving_license + ']\033[m')
                 user = User.objects.create_user(username, email, password)  # Create new user, no need to save
-                group = Group.objects.get(name=role)  # Get role selected
+                group = Group.objects.get(name=role)  # Get selected role
                 user.groups.add(group)  # Add user to group
                 profile = Profile(user=user, driving_license=driving_license)  # Create user's profile
+
                 if str(role) == 'student':  # casting str role in str: only way to make this if working
                     profile.time = datetime.strptime('00:00:00', '%H:%M:%S')
                 else:
@@ -122,58 +126,85 @@ def create(request):
 
                 user.save()
                 profile.save()
+
+                print('\033[96m> Created user ['+username+' ('+email+')]\n               Role    '+role+
+                      '\n               License '+(driving_license or '_')+
+                      '\n               Hours   '+('Yes' if profile.time is not None else '_')+'\033[m')
+
                 return redirect('index')
+
             else:
                 has_error = True
+
                 if not utilities.is_granted(request.user, role, True):
-                    error = 'You don\'t have permission to create an ' + role + ' user'
-                    print(
-                        '\033[1;91m> Logged user [' + request.user.username + '] does not have permission to create ' + \
-                        role + ' users')
+                    error = 'You don\'t have permission to create a ' + role + ' user'
+                    print('\033[1;91m< User ['+request.user.username+'] is not allowed to create ['+role+'] users'
+                        '\033[m')
                 elif utilities.find_existing_user(username):
-                    error = 'An error has occured: User you\'re trying to create apparently already exists, please try again with an other Username'
-                    print('\033[1;91m> User [' + username + '] already excists\033[m')
+                    error = 'User already exist, please try again with an other Username'
+                    print('\033[1;91m< User ['+username+'] already exist\033[m')
     else:
-        print('\033[96m> Accessed create user page\033[m')
+        print('\033[96m> Access to create user\033[m')
         form = forms.CreateForm(request=request)
 
     return render(request, 'User/create_user.html', locals())
 
 
 def edit(request, user_id):
-    print('\033[96m> Accessing user ' + str(user_id) + ' edition\033[m')
     user = get_object_or_404(User, pk=user_id)
 
     to_edit_role = user.groups.all()[0].name
-    if not utilities.is_granted(request.user, 'secretary') or not utilities.is_granted(request.user, to_edit_role, strict=True):
+    if not utilities.is_granted(request.user, 'secretary') or \
+            not utilities.is_granted(request.user, to_edit_role, strict=True):
+        print('\033[1;91m< User have to:\n  - be granted [secretary]\n  - inherit user role\033[m')
         raise PermissionDenied
 
     has_error = False
     if request.method == "POST":
-        print('\033[96m> Trying to edit user\033[m')
+        print('\033[96m> Attempting to edit user\033[m')
+
+        # picking right form: if user is a student it also have hours and driving license
         form = forms.EditForm(request.POST)
         if utilities.has_group(user, 'student'):
             form = forms.EditWithTimeForm(request.POST)
+
         if form.is_valid():
-            print('\033[92m - Edit form is valid\033[m')
             username = form.cleaned_data['username']
-            if user.username is username and User.objects.get(username=username):
+            # Checking if username isn't already attributed
+            if user.username is username and utilities.find_existing_user(username=username):
                 has_error = True
                 error = "This username ("+username+") is already in use by another student"
-                print('\033[91m - New username already attributed\033[m')
+                print('\033[1;91m< User ['+username+'] already exist\033[m')
             else:
                 email = form.cleaned_data['email']
                 driving = form.cleaned_data['driving'] or None
                 hours = form.cleaned_data['hours'] or 0
                 minutes = form.cleaned_data['minutes'] or 0
 
-                if hours is not 0 or minutes is not 0:
-                    t1 = timedelta(hours=hours, minutes=minutes)
-                    t2 = timedelta(hours=user.profile.time.hour, minutes=user.profile.time.minute)
-                    new_time = t1+t2
-                    delta_as_time_obj = gmtime(new_time.total_seconds())
-                    new_time = strftime('%H:%M', delta_as_time_obj)
-                    user.profile.time = new_time
+                if hours is not 0 or minutes is not 0:  # Adding or removing hours
+                    user.profile.time = strftime(
+                        '%H:%M',
+                        gmtime(
+                            (
+                                timedelta(
+                                    hours=hours,
+                                    minutes=minutes
+                                ) +
+                                timedelta(
+                                    hours=user.profile.time.hour,
+                                    minutes=user.profile.time.minute
+                                )
+                            ).total_seconds()
+                        )
+                    )  # Ha, just playing with indent
+
+                    # # Old time calcul, just keeping it safe here
+                    # add_time_delta = timedelta(hours=hours, minutes=minutes)
+                    # remain_time_delta = timedelta(hours=user.profile.time.hour, minutes=user.profile.time.minute)
+                    # new_time_delta = add_time_delta+remain_time_delta
+                    # new_time_obj = gmtime(new_time_delta.total_seconds())
+                    # new_time_str = strftime('%H:%M', new_time_obj)
+                    # user.profile.time = new_time_str
 
                 user.username = username
                 user.email = email
@@ -181,11 +212,15 @@ def edit(request, user_id):
                 user.save()
                 user.profile.save()
 
+                print('\033[92m✓ Updated user ['+user.username+']\033[m')
+
                 return redirect('show_user', user_id=user_id)
         else:
             has_error = True
-            print('\033[91m - Edit form is invalid\033[m')
+            print('\033[91m✕ Updating user failed\033[m')
     else:
+        print('\033[96m> Access to user ['+str(user.username)+']\'s edition\033[m')
+
         data = {
             'username': user.username,
             'email': user.email,
@@ -198,3 +233,17 @@ def edit(request, user_id):
 
     return render(request, 'User/edit.html', locals())
 
+
+def delete(request, user_id):
+    user =get_object_or_404(User, pk=user_id)
+
+    if not utilities.is_granted(user=request.user, role='secretary') or\
+        not utilities.is_granted(user=request.user, role=utilities.get_highest_role(user=user)):
+        print('\033[1;91m< User does not have permission to delete this user\033[m')
+        raise PermissionDenied
+
+    username = user.username
+    user.delete()
+    print('\033[92m✓ User ['+username+'] have been deleted with it\'s profile and appointments\n\033[m')
+
+    return redirect('index')

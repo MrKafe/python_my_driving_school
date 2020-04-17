@@ -35,6 +35,17 @@ def get_inheritance_roles(user, strict=False, only_id=False):
                     unique_list.append(allowed)
     return unique_list
 
+
+def get_highest_role(user, only_id=False):
+    user_roles = user.groups.all()
+    highest = None
+    for role in ROLE_HIERARCHY:
+        role = Group.objects.get(name=role)
+        highest = role if role in user_roles else highest  # Ha, just playing with ternary
+
+    return highest.id if only_id else highest.name
+
+
 @register.filter(name='granted')
 def is_granted(user, role, strict=False):
     if user.is_staff:
