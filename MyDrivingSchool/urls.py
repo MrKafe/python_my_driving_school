@@ -18,9 +18,8 @@ from django.urls import path, include
 from dashboard import views
 
 urlpatterns = [
-    path('', views.home),  # TODO: Do not create both '/' and '/dashboard'
     path('admin/', admin.site.urls),
-    path('dashboard/', include('dashboard.urls')),
     path('user/', include('User.urls')),
     path('appointment/', include('Meeting.urls')),
+    path('', include('dashboard.urls')),
 ]
