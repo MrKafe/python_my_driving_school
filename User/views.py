@@ -55,24 +55,20 @@ def index(request, filter=None):
 
 
 def show(request, user_id=None):
-    current_user_id = request.user.id
+    user = get_object_or_404(User, pk=user_id)
 
-    # security: student can only access it's own account, instructors and upper can access every
-    # TODO: Not well secured: do as delete
-    if (not utilities.is_granted(request.user, 'student')) or \
-            user_id is None or \
-            ((not utilities.is_granted(request.user, 'instructor')) and user_id != current_user_id):
-        print('\033[1;91m< User have to:\n  - be granted [instructor]\n  - own the account\033[m')
+    # security: student can only access it's own account, instructors and upper can access their and lower role
+    if not utilities.is_granted(user=request.user, role=utilities.get_highest_role(user=user)) or \
+        (not utilities.is_granted(request.user, 'instructor') and user_id != request.user.id):
+        print('\033[1;91m< User does not have permission\033[m')
         raise PermissionDenied
 
-    # TODO: get or 404
-    user = User.objects.get(pk=user_id)
     print('\033[96m> Access to user [' + str(user.username) + ']\'s details\033[m')
 
     # template will decide text to display according to this information
     own_account = False
     has_error = False
-    if user_id == current_user_id:
+    if user_id == request.user.id:
         own_account = True
         if request.method == "POST":
             print('\033[96m> Attempting to change [' + str(user.username) + ']\'s password\033[m')
